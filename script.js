@@ -23,13 +23,6 @@ let storeVertZ = NaN;
 const model = [];
 const faces = [];
 
-function clipX(x1, y1, z1, x2, y2, z2, x) {
-  const t = (x - x1) / (x2 - x1);
-  const y = y1 + t * (y2 - y1);
-  const z = z1 + t * (z2 - z1);
-  return [y, z];
-}
-
 function vert(vertX, vertY, vertZ) {
   vertDistance.push(Math.sqrt(Math.pow(vertX - camX, 2) + Math.pow(vertY - camY, 2) + Math.pow(vertZ - camZ, 2)) + (Math.random() / 100));
   vertX -= camX;
@@ -72,75 +65,79 @@ function vert(vertX, vertY, vertZ) {
   vertY = canvas.height / 2 - vertY;
   */
 
-  if (vertZ > 0) {
-    polygonCoordinates.push(vertX, vertY, vertZ);
-  }
+  polygonCoordinates.push(vertX, vertY, vertZ);
 };
 
-function clipLiveXYZ(polygon, line) {
+function clipZ(x1, y1, z1, x2, y2, z2, z) {
+  const t = (z - z1) / (z2 - z1);
+  const x = x1 + t * (x2 - x1);
+  const y = y1 + t * (y2 - y1);
+  return [x, y, z];
+}
+
+function clipLiveXYZ(polygon, clippingZ) {
   let clippedPolygon = [];
   for (let i = 0; i < polygon.length; i += 3) {
-    let x1 = polygon[i];
-    let y1 = polygon[i + 1];
-    let z1 = polygon[i + 2];
-    let x2 = polygon[(i + 3) % polygon.length];
-    let y2 = polygon[(i + 4) % polygon.length];
-    let z2 = polygon[(i + 5) % polygon.length];
+      let x1 = polygon[i];
+      let y1 = polygon[i + 1];
+      let z1 = polygon[i + 2];
+      let x2 = polygon[(i + 3) % polygon.length];
+      let y2 = polygon[(i + 4) % polygon.length];
+      let z2 = polygon[(i + 5) % polygon.length];
 
-    if (x1 > line && x2 > line) {
-      clippedPolygon.push(x1, y1, z1);
-    } else if (x1 <= line && x2 <= line) {
-      // Skip the entire edge
-    } else {
-      let intercept = clipX(x1, y1, z1, x2, y2, z2, line);
-      if (x1 > line) {
-        clippedPolygon.push(x1, y1, z1);
-        clippedPolygon.push(line, intercept[0], intercept[1]);
+      if (z1 >= clippingZ && z2 >= clippingZ) {
+          clippedPolygon.push(x1, y1, z1);
+      } else if (z1 < clippingZ && z2 < clippingZ) {
+          // Both vertices are behind the clipping plane, skip this edge.
+          continue;
       } else {
-        clippedPolygon.push(line, intercept[0], intercept[1]);
-        clippedPolygon.push(x2, y2, z2);
+          // Clip the line against the z-plane
+          let intercept = clipZ(x1, y1, z1, x2, y2, z2, clippingZ);
+          if (z1 >= clippingZ) {
+              clippedPolygon.push(x1, y1, z1);
+              clippedPolygon.push(intercept[0], intercept[1], intercept[2]);
+          } else {
+              clippedPolygon.push(intercept[0], intercept[1], intercept[2]);
+              clippedPolygon.push(x2, y2, z2);
+          }
       }
-    }
   }
   return clippedPolygon;
 }
 
 function endPath() {
-
   storeVertX = NaN;
   storeVertY = NaN;
   storeVertZ = NaN;
 
-  var avg = vertDistance.map((c, i, vertDistance) => c / vertDistance.length).reduce((p, c) => c + p);
+  var avg = vertDistance.reduce((p, c) => c + p, 0) / vertDistance.length;
   polygonDistance.push(avg);
   vertDistance = [];
 
-  polygonCoordinates = clipLiveXYZ(polygonCoordinates, 0);
+  // Perform z-clipping at z = 10
+  polygonCoordinates = clipLiveXYZ(polygonCoordinates, 10);
 
   var storeCoordinates = [];
-  for (let v = 0; v < polygonCoordinates.length; v = v + 3) {
+  for (let v = 0; v < polygonCoordinates.length; v += 3) {
+      var storeX = polygonCoordinates[v];
+      var storeY = polygonCoordinates[v + 1];
+      var storeZ = polygonCoordinates[v + 2];
 
-    var storeX = polygonCoordinates[v];
-    var storeY = polygonCoordinates[v + 1]
-    var storeZ = polygonCoordinates[v + 2];
-
-    storeX = storeX * (250 / storeZ) * zoom;
-    storeY = storeY * (250 / storeZ) * zoom;
-    storeX = canvas.width / 2 + storeX;
-    storeY = canvas.height / 2 - storeY;
-    storeCoordinates.push(storeX, storeY);
+      // Project 3D coordinates to 2D using perspective projection
+      storeX = storeX * (250 / storeZ) * zoom;
+      storeY = storeY * (250 / storeZ) * zoom;
+      storeX = canvas.width / 2 + storeX;
+      storeY = canvas.height / 2 - storeY;
+      storeCoordinates.push(storeX, storeY);
   }
 
   allCoordinates[polygonIndex] = storeCoordinates;
   allCoordinates[polygonIndex].unshift(avg);
   allCoordinates[polygonIndex].push(fillColour);
 
-  // allCoordinates[polygonIndex] = polygonCoordinates;
-  // allCoordinates[polygonIndex].unshift(avg);
-  // allCoordinates[polygonIndex].push(fillColour);
   polygonCoordinates = [];
-  polygonIndex = polygonIndex + 1;
-};
+  polygonIndex++;
+}
 
 function changeColor(col, amt) {
 
@@ -317,11 +314,10 @@ function sortAndDraw() {
       // ctx.fillStyle = changeColor(allCoordinates[polygon][allCoordinates[polygon].length - 1], polygonDistance[i] / 3);
       ctx.fillStyle = allCoordinates[polygon][allCoordinates[polygon].length - 1];
       ctx.fill();
-      /*
+      
       ctx.lineWidth = 1;
       ctx.strokeStyle = changeColor(allCoordinates[polygon][allCoordinates[polygon].length - 1], polygonDistance[i] / 3);
       ctx.stroke();
-      */
     }
   }
 
@@ -338,41 +334,27 @@ function loadData() {
 
   // loading in obj file from model and faces.
 
-  /*
   fillColour = "#3d4275";
-  vert(-10, 20, 10);
-  vert(10, 20, 10);
-  vert(10, 20, -10);
-  vert(-10, 20, -10);
-  endPath();
-
-  fillColour = "#63753d";
   vert(-10, 0, 10);
   vert(10, 0, 10);
   vert(10, 0, -10);
   vert(-10, 0, -10);
   endPath();
 
-  fillColour = "#a83260";
-  vert(-10, 20, 10);
-  vert(-10, 0, 10);
-  vert(-10, 0, -10);
-  vert(-10, 20, -10);
+  fillColour = "#3d4275";
+  vert(-10, 10, 10);
+  vert(10, 10, 10);
+  vert(10, 10, -10);
+  vert(-10, 10, -10);
   endPath();
 
-  fillColour = "#a86332";
-  vert(10, 20, 10);
-  vert(10, 0, 10);
-  vert(10, 0, -10);
-  vert(10, 20, -10);
-  endPath();
-  */
-
+  /*
   fillColour = "#00FFFF";
   vert(10, 10, -10);
   vert(-10, 10, -10);
   vert(0, 0, -10);
   endPath();
+  */
 
   /*
   for (let q = 0; q < faces.length; q = q + 3) {
