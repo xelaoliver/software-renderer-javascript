@@ -2,8 +2,10 @@
 
 items:
 
-- index.html
-- script.js
-- obj-file-formatter.py
+- index.html // web/ui aspect (ish)
+- script.js // main core of the project
+- obj-file-formatter.py // formats .obj files in a way my software recognises them
 
-pls don't steal the code and claim it is yours.
+extras:
+
+- clipping.js // testing different clipping algos.
