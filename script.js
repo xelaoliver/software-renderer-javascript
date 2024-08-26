@@ -115,7 +115,7 @@ function endPath() {
   vertDistance = [];
 
   // Perform z-clipping at z = 10
-  polygonCoordinates = clipLiveXYZ(polygonCoordinates, 10);
+  polygonCoordinates = clipLiveXYZ(polygonCoordinates, 1);
 
   var storeCoordinates = [];
   for (let v = 0; v < polygonCoordinates.length; v += 3) {
@@ -305,7 +305,7 @@ function sortAndDraw() {
       let clippedPolygon = XclipMinusPolygon(allCoordinates[polygon].slice(1, allCoordinates[polygon].length - 1), 10);
 
       clippedPolygon = XclipPositivePolygon(clippedPolygon, canvas.width - 10);
-      clippedPolygon = YclipMinusPolygon(clippedPolygon, canvas.height - 10);
+      // clippedPolygon = YclipMinusPolygon(clippedPolygon, canvas.height - 10);
       // clippedPolygon = YclipPositivePolygon(clippedPolygon, 10);
 
       for (let j = 0; j < clippedPolygon.length; j += 2) {
@@ -314,7 +314,7 @@ function sortAndDraw() {
       // ctx.fillStyle = changeColor(allCoordinates[polygon][allCoordinates[polygon].length - 1], polygonDistance[i] / 3);
       ctx.fillStyle = allCoordinates[polygon][allCoordinates[polygon].length - 1];
       ctx.fill();
-      
+
       ctx.lineWidth = 1;
       ctx.strokeStyle = changeColor(allCoordinates[polygon][allCoordinates[polygon].length - 1], polygonDistance[i] / 3);
       ctx.stroke();
