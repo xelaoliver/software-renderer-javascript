@@ -1,12 +1,11 @@
 const ctx = document.getElementById('canvas').getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
 const fps = 60;
-var camera = { x: 0, y: 0, z: 0, rotx: 0, roty: 0, speed: 1 };
+var camera = { x: 0, y: 0, z: 0, rotx: 0, roty: 0, speed: 1};
 var zoom = 1;
-var movebool = new Array(7); movebool.fill(0);
-var store = new Array(3); store.fill(null);
+var movebool = {w: false, s: false, a: false, d: false, leftarrow: false, rightarrow: false, uparrow: false, downarrow: false, space: false, shift: false};
+var store = {x: null, y: null, z: null};
 var vertdistance = [];
 
 function vert(x, y, z) {
@@ -26,6 +25,8 @@ function vert(x, y, z) {
   y = Math.sin((camera.roty*Math.PI)/180)*store.z + Math.cos((camera.roty*Math.PI)/180)*store.y;
   z = Math.cos((camera.roty*Math.PI)/180)*store.z - Math.sin((camera.roty*Math.PI)/180)*store.y;
 
+  if (y < 0) {y = Math.abs(y)} else {y = y-(y*2)} // invert y-coordinate
+
   polycoords.push(x, y, z);
 }
 
@@ -40,28 +41,8 @@ function findIntercept(x1, y1, x2, y2, line) {
 
 function clip(polygon, line, type) {
   let clippedpoly = [];
-  if (type === 'z') {
-    for (let i = 0; i < polygon.length; i += 3) {
-      let coords = {x1: polygon[i], y1: polygon[i+1], z1: polygon[i+2], x2: polygon[(i+3)%polgyon.length], y2: polygon[(i+4)%polgyon.length], z2: polygon[(i+5)%polgyon.length]};
-
-      if (coords.z1 >= line && coords.z2 >= line) {
-        clippedpoly.push(coords.x1, coords.y1, coords.z1);
-      } else if (coords.z1 < line && coords.z2 < line) {
-        continue;
-      } else {
-        // Clip the line against the axis/plane
-        let intercept = clipz(coords.x1, coords.y1, coords.z1, coords.x2, coords.y2, coords.z2, line);
-          
-        if (coords[2] >= line) {
-          clippedpoly.push(coords.x1, coords.y1, coords.z1);
-          clippedpoly.push(intercept[0], intercept[1], intercept[2]);
-        } else {
-          clippedpoly.push(intercept[0], intercept[1], intercept[2]);
-          clippedpoly.push(coords.x2, coords.y2, coords.z2);
-        }
-      }
-    }
-  } else if (type === 'x-') {
+  
+  if (type === 'x-') {
     for (let i = 0; i < polygon.length; i += 2) {
       let coords = {
         x1: polygon[i],
@@ -104,6 +85,27 @@ function clip(polygon, line, type) {
         }
       }
     }
+  } else {
+    for (let i = 0; i < polygon.length; i += 3) {
+      let coords = {x1: polygon[i], y1: polygon[i+1], z1: polygon[i+2], x2: polygon[(i+3)%polygon.length], y2: polygon[(i+4)%polygon.length], z2: polygon[(i+5)%polygon.length]};
+
+      if (coords.z1 >= line && coords.z2 >= line) {
+        clippedpoly.push(coords.x1, coords.y1, coords.z1);
+      } else if (coords.z1 < line && coords.z2 < line) {
+        continue;
+      } else {
+        // Clip the line against the axis/plane
+        let intercept = clipz(coords.x1, coords.y1, coords.z1, coords.x2, coords.y2, coords.z2, line);
+          
+        if (coords[2] >= line) {
+          clippedpoly.push(coords.x1, coords.y1, coords.z1);
+          clippedpoly.push(intercept[0], intercept[1], intercept[2]);
+        } else {
+          clippedpoly.push(intercept[0], intercept[1], intercept[2]);
+          clippedpoly.push(coords.x2, coords.y2, coords.z2);
+        }
+      }
+    }
   }
   return clippedpoly;
 }
@@ -127,10 +129,10 @@ function sortndraw() {
     if (polygon < polydistance.length) {
       ctx.beginPath();
 
-      // let clippedpoly = clip(allcoords[polygon].slice(1, allcoords[polygon].length - 1), "x-",10);
-      // clippedpoly = clip(clippedpoly, "x+",canvas.width - 10);
+      let clippedpoly = clip(allcoords[polygon].slice(1, allcoords[polygon].length - 1), "x-", 10);
+      clippedpoly = clip(clippedpoly, "x+",canvas.width - 10);
 
-      clippedpoly = allcoords[polygon].slice(1, allcoords[polygon].length-1);
+      // clippedpoly = allcoords[polygon].slice(1, allcoords[polygon].length-1);
         
       for (let j = 0; j < clippedpoly.length; j += 2) {
         ctx.lineTo(clippedpoly[j], clippedpoly[j+1]);
@@ -151,8 +153,9 @@ function endpath() {
   var avg = vertdistance.reduce((p, c) => c + p, 0) / vertdistance.length;
   polydistance.push(avg);
   vertdistance = [];
-
-  // polycoords = clip(polycoords, "z", 1);
+  
+  polycoords = clip(polycoords, null, 1);
+  // fix this bug ^^
 
   var storecoords = [];
   for (let v = 0; v < polycoords.length; v += 3) {
@@ -179,7 +182,74 @@ function endpath() {
   store.z = null;
 }
 
+function keydown(evt) {
+  switch (evt.keyCode) {
+    case 67: movebool.w = true; break;
+    case 83: movebool.s = true; break;
+    case 65: movebool.a = true; break;
+    case 68: movebool.d = true; break;
+    case 37: movebool.leftarrow = true; break;
+    case 39: movebool.rightarrow = true; break;
+    case 38: movebool.uparrow = true; break;
+    case 40: movebool.downarrow = true; break;
+    case 32: movebool.space = true; break;
+    case 16: movebool.shift = true; break;
+  }
+}
+
+function keyup(evt) {
+  switch (evt.keyCode) {
+    case 67: movebool.w = false; break;
+    case 83: movebool.s = false; break;
+    case 65: movebool.a = false; break;
+    case 68: movebool.d = false; break;
+    case 37: movebool.leftarrow = false; break;
+    case 39: movebool.rightarrow = false; break;
+    case 38: movebool.uparrow = false; break;
+    case 40: movebool.downarrow = false; break;
+    case 32: movebool.space = false; break;
+    case 16: movebool.shift = false; break;
+  }
+}
+
+function controllmanager() {
+
+  console.log(camera);
+  
+  document.addEventListener("keydown", keydown);
+  document.addEventListener("keyup", keyup);
+
+  if (movebool.w) {
+    camera.x -= camera.speed*Math.sin(camera.rotx*Math.PI/180);
+    camera.z += camera.speed*Math.cos(camera.rotx*Math.PI/180);
+  } 
+  if (movebool.s) {
+    camera.x += camera.speed*Math.sin(camera.rotx*Math.PI/180);
+    camera.z -= camera.speed*Math.cos(camera.rotx*Math.PI/180);
+  }
+  if (movebool.a) {
+    camera.z -= camera.speed*Math.sin(camera.rotx*Math.PI/180);
+    camera.x -= camera.speed*Math.cos(camera.rotx*Math.PI/180);
+  }
+  if (movebool.d) {
+    camera.z += camera.speed*Math.sin(camera.rotx*Math.PI/180);
+    camera.x += camera.speed*Math.cos(camera.rotx*Math.PI/180);
+  }
+  
+  if (movebool.leftarrow) {camera.rotx += camera.speed}
+  if (movebool.rightarrow) {camera.rotx -= camera.speed}
+  if (movebool.uparrow) {camera.roty -= camera.speed}
+  if (movebool.downarrow) {camera.roty += camera.speed}
+  if (movebool.space) {camera.y += camera.speed}
+  if (movebool.shift) {camera.y -= camera.speed}
+
+  console.log(camera);
+}
+
 function gameloop() {
+  controllmanager();
+  
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   polygonindex = 0;
   allcoords = [];
   polycoords = [];
@@ -194,4 +264,4 @@ function gameloop() {
   sortndraw();
 }
 
-gameloop();
+setInterval(function() {gameloop()}, 1000/fps);
