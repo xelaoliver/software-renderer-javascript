@@ -5,6 +5,8 @@ items:
 - index.html // web/ui aspect (ish)
 - script.js // main core of the project
 - obj-file-formatter.py // formats .obj files in a way my software recognises them
+- INDEV-optimized-script.js // optimized script.js
+- optimized2-3d2.js // better optimized INDEV-optimized-script.js
 
 extras:
 
