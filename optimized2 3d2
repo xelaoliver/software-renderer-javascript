@@ -1,0 +1,62 @@
+const ctx = document.getElementById('canvas').getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+
+var camera = {fov: 70, xPosition: 0, yPosition: 0, zPosition: -5, xRotation: 0, yRotation: 0, movementSpeed: 1}
+var translatedCoordinates = [];
+var verticesDistances = [];
+var store = {x: null, y: null, z: null}
+
+function initializeVariables() {
+    verticesDistances = [];
+    triangleCoordinates = [];
+    translatedCoordinates = [];
+    store.x = null;
+    store.y = null;
+    store.z = null;
+}
+
+function calculateVertex(vertexX, vertexY, vertexZ) {
+    vertexX += camera.xPosition;
+    vertexY += camera.yPosition;
+    vertexZ += camera.zPosition;
+
+    verticesDistances.push(Math.sqrt(Math.pow(vertexX, 2) + Math.pow(vertexY, 2) + Math.pow(vertexZ, 2)));
+
+    store.x = vertexX;
+    store.z = vertexZ;
+    store.y = vertexY;
+
+    vertexX = Math.sin(camera.xRotation)*store.z + Math.cos(camera.xRotation)*store.x;
+    store.z = Math.cos(camera.xRotation)*store.z - Math.sin(camera.xRotation)*store.x;
+
+    vertexY = Math.sin(camera.yRotation)*store.z + Math.cos(camera.yRotation)*store.y;
+    vertexZ = Math.cos(camera.yRotation)*store.z - Math.sin(camera.yRotation)*store.y;
+
+    triangleCoordinates.push(vertexX, vertexZ, vertexY);
+}
+
+function returnZeroIfInfinity(int1, int2) {
+    if (int2 == 0) {
+        return 1;
+    } else {
+        return int1/int2;
+    }
+}
+
+function translateTriangleCoordinates(amountOfTriangles, focalLength) {
+    for (let index = 0; index < amountOfTriangles; index += 3) {
+
+        store.x = triangleCoordinates[index]*returnZeroIfInfinity(focalLength, triangleCoordinates[index+2]);
+        store.y = triangleCoordinates[index+1]*returnZeroIfInfinity(focalLength, triangleCoordinates[index+2]);
+
+        translatedCoordinates.push(Math.floor(store.x+canvas.width/2), Math.floor(store.y+canvas.height/2));
+    }
+}
+
+initializeVariables();
+calculateVertex(10, 0, 0);
+calculateVertex(-10, 0, 0);
+calculateVertex(0, 10, 0);
+translateTriangleCoordinates(triangleCoordinates.length, (canvas.width/2)/Math.tan((camera.fov*Math.PI/180)/2));
+
+console.log(translatedCoordinates);
