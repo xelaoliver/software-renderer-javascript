@@ -1,10 +1,9 @@
 const ctx = document.getElementById('canvas').getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-const fps = 60;
-var camera = { x: 0, y: 0, z: 0, rotx: 0, roty: 0, speed: 1};
+var camera = { x: 0, y: 0, z: -10, rotx: 0, roty: 0, speed: 0.5};
 var zoom = 1;
-var movebool = {w: false, s: false, a: false, d: false, leftarrow: false, rightarrow: false, uparrow: false, downarrow: false, space: false, shift: false};
+var movebool = {w: false, s: false, a: false, d: false, leftarrow: false, rightarrow: false, uparrow: false, downarrow: false, space: false, shift: false, zoom: false};
 var store = {x: null, y: null, z: null};
 var vertdistance = [];
 
@@ -30,9 +29,39 @@ function vert(x, y, z) {
   polycoords.push(x, y, z);
 }
 
-function clipz(x1, y1, z1, x2, y2, z2, z) {
+function findinterceptz(x1, y1, z1, x2, y2, z2, z) {
   const t = (z-z1)/(z2-z1);
   return [x1+t*(x2-x1), (y1+t*(y2-y1)), z];
+}
+
+function clipz(polygon, line) {
+  let clippedPolygon = [];
+  for (let i = 0; i < polygon.length; i += 3) {
+      let x1 = polygon[i];
+      let y1 = polygon[i + 1];
+      let z1 = polygon[i + 2];
+      let x2 = polygon[(i + 3) % polygon.length];
+      let y2 = polygon[(i + 4) % polygon.length];
+      let z2 = polygon[(i + 5) % polygon.length];
+
+      if (z1 >= line && z2 >= line) {
+          clippedPolygon.push(x1, y1, z1);
+      } else if (z1 < line && z2 < line) {
+          // Both vertices are behind the clipping plane, skip this edge.
+          continue;
+      } else {
+          // Clip the line against the z-plane
+          let intercept = findinterceptz(x1, y1, z1, x2, y2, z2, line);
+          if (z1 >= line) {
+              clippedPolygon.push(x1, y1, z1);
+              clippedPolygon.push(intercept[0], intercept[1], intercept[2]);
+          } else {
+              clippedPolygon.push(intercept[0], intercept[1], intercept[2]);
+              clippedPolygon.push(x2, y2, z2);
+          }
+      }
+  }
+  return clippedPolygon;
 }
 
 function findIntercept(x1, y1, x2, y2, line) {
@@ -44,12 +73,7 @@ function clip(polygon, line, type) {
   
   if (type === 'x-') {
     for (let i = 0; i < polygon.length; i += 2) {
-      let coords = {
-        x1: polygon[i],
-        y1: polygon[i+1],
-        x2: polygon[(i+2)%polygon.length],
-        y2: polygon[(i+3)%polygon.length],
-      };
+      let coords = {x1: polygon[i], y1: polygon[i+1], x2: polygon[(i+2)%polygon.length], y2: polygon[(i+3)%polygon.length]};
 
       if (coords.x1 > line && coords.x2 > line) {
         clippedpoly.push(x1, y1);
@@ -129,10 +153,10 @@ function sortndraw() {
     if (polygon < polydistance.length) {
       ctx.beginPath();
 
-      let clippedpoly = clip(allcoords[polygon].slice(1, allcoords[polygon].length - 1), "x-", 10);
-      clippedpoly = clip(clippedpoly, "x+",canvas.width - 10);
+      // let clippedpoly = clip(allcoords[polygon].slice(1, allcoords[polygon].length - 1), "x-", 10);
+      // clippedpoly = clip(clippedpoly, "x+",canvas.width - 10);
 
-      // clippedpoly = allcoords[polygon].slice(1, allcoords[polygon].length-1);
+      let clippedpoly = allcoords[polygon].slice(1, allcoords[polygon].length-1);
         
       for (let j = 0; j < clippedpoly.length; j += 2) {
         ctx.lineTo(clippedpoly[j], clippedpoly[j+1]);
@@ -153,8 +177,8 @@ function endpath() {
   var avg = vertdistance.reduce((p, c) => c + p, 0) / vertdistance.length;
   polydistance.push(avg);
   vertdistance = [];
-  
-  polycoords = clip(polycoords, null, 1);
+
+  polycoords = clipz(polycoords, 0.001);
   // fix this bug ^^
 
   var storecoords = [];
@@ -163,8 +187,8 @@ function endpath() {
     store.y = polycoords[v+1];
     store.z = polycoords[v+2];
 
-    store.x = store.x*(250/store.z)*zoom;
-    store.y = store.y*(250/store.z)*zoom;
+    store.x = store.x*(250/store.z)*camera.zoom;
+    store.y = store.y*(250/store.z)*camera.zoom;
     store.x += canvas.width/2;
     store.y += canvas.height/2;
     storecoords.push(store.x, store.y);
@@ -184,7 +208,7 @@ function endpath() {
 
 function keydown(evt) {
   switch (evt.keyCode) {
-    case 67: movebool.w = true; break;
+    case 87: movebool.w = true; break;
     case 83: movebool.s = true; break;
     case 65: movebool.a = true; break;
     case 68: movebool.d = true; break;
@@ -194,12 +218,13 @@ function keydown(evt) {
     case 40: movebool.downarrow = true; break;
     case 32: movebool.space = true; break;
     case 16: movebool.shift = true; break;
+    case 67: movebool.zoom = true; break;
   }
 }
 
 function keyup(evt) {
   switch (evt.keyCode) {
-    case 67: movebool.w = false; break;
+    case 87: movebool.w = false; break;
     case 83: movebool.s = false; break;
     case 65: movebool.a = false; break;
     case 68: movebool.d = false; break;
@@ -209,13 +234,11 @@ function keyup(evt) {
     case 40: movebool.downarrow = false; break;
     case 32: movebool.space = false; break;
     case 16: movebool.shift = false; break;
+    case 67: movebool.zoom = false; break;
   }
 }
 
 function controllmanager() {
-
-  console.log(camera);
-  
   document.addEventListener("keydown", keydown);
   document.addEventListener("keyup", keyup);
 
@@ -236,14 +259,13 @@ function controllmanager() {
     camera.x += camera.speed*Math.cos(camera.rotx*Math.PI/180);
   }
   
-  if (movebool.leftarrow) {camera.rotx += camera.speed}
-  if (movebool.rightarrow) {camera.rotx -= camera.speed}
-  if (movebool.uparrow) {camera.roty -= camera.speed}
-  if (movebool.downarrow) {camera.roty += camera.speed}
+  if (movebool.leftarrow) {camera.rotx += camera.speed*Math.PI}
+  if (movebool.rightarrow) {camera.rotx -= camera.speed*Math.PI}
+  if (movebool.uparrow) {camera.roty -= camera.speed*Math.PI}
+  if (movebool.downarrow) {camera.roty += camera.speed*Math.PI}
   if (movebool.space) {camera.y += camera.speed}
   if (movebool.shift) {camera.y -= camera.speed}
-
-  console.log(camera);
+  if (movebool.zoom) {camera.zoom = 3} else {camera.zoom = 1}
 }
 
 function gameloop() {
@@ -261,7 +283,15 @@ function gameloop() {
   vert(0, 1, 2);
   endpath();
 
+  fillColour = '#000000';
+  vert(1, -1, -2);
+  vert(-1, -1, -2);
+  vert(0, 1, -2);
+  endpath();
+
   sortndraw();
+
+  requestAnimationFrame(gameloop);
 }
 
-setInterval(function() {gameloop()}, 1000/fps);
+requestAnimationFrame(gameloop);
