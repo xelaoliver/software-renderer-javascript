@@ -29,7 +29,7 @@ def vert(x1, y1, z1):
     x1 = math.sin(camera["rotx"])*z1 + math.cos(camera["rotx"])*store["x1"]
     store["z1"] = math.cos(camera["rotx"])*store["z1"] - math.sin(camera["rotx"])*store["x1"]
 
-    y1 = math.sin(camera["roty"])*z1 + math.cos(camera["roty"])*store["y1"]
+    y1 = math.sin(camera["roty"])*store["z1"] + math.cos(camera["roty"])*store["y1"]
     z1 = math.cos(camera["roty"])*store["z1"] - math.sin(camera["roty"])*store["y1"]
 
     x1 = -x1
@@ -51,6 +51,9 @@ def triangle(x1, y1, z1, x2, y2, z2, x3, y3, z3, colour):
 def findxyintercept(x1, y1, z1, x2, y2, z2, line):
     t = (line-z1)/(z2-z1)
     return {"x1": x1+t*(x2-x1), "y1": y1+t*(y2-y1), "z1": line}
+
+def zerodivision(a, b):
+    return a/b if b else 0
 
 def translate():
     global allcoordinates
@@ -89,8 +92,8 @@ def translate():
 
             j += i
 
-            allcoordinates.append(math.floor(store[j]*(camera["focallength"]/store[2+j]))+screen["x"]/2)
-            allcoordinates.append(math.floor(store[1+j]*(camera["focallength"]/store[2+j]))+screen["y"]/2)
+            allcoordinates.append(math.floor(zerodivision(store[j]*(camera["focallength"]), store[2+j]))+screen["x"]/2)
+            allcoordinates.append(math.floor(zerodivision(store[1+j]*(camera["focallength"]), store[2+j]))+screen["y"]/2)
         allcoordinates.append(store[i+9])
         allcoordinates.append(store[i+10])
 
@@ -124,6 +127,10 @@ while running:
         camera["z"] += camera["speed"] * math.sin(camera["rotx"])
     if keys[pygame.K_SPACE]: camera["y"] += camera["speed"]
     if keys[pygame.K_LSHIFT]: camera["y"] -= camera["speed"]
+    if keys[pygame.K_UP]: camera["roty"] += math.radians(camera["speed"])
+    if keys[pygame.K_DOWN]: camera["roty"] -= math.radians(camera["speed"])
+    if keys[pygame.K_LEFT]: camera["rotx"] -= math.radians(camera["speed"])
+    if keys[pygame.K_RIGHT]: camera["rotx"] += math.radians(camera["speed"])
 
     
     alldistances = []
