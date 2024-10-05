@@ -2,7 +2,7 @@ import pygame
 import math
 
 screen = {"x": 535, "y": 300, "fps": 60}
-camera = {"x": 0, "y": 0, "z": 0, "rotx": 0, "roty": 0, "speed": 2, "fov": 90}
+camera = {"x": 0, "y": 0, "z": 0, "rotx": 0, "roty": 0, "speed": 1, "fov": 90}
 camera["focallength"] = screen["x"]/2/math.tan(math.radians(camera["fov"])/2)
 allcoordinates = []
 alldistances = []
@@ -68,9 +68,7 @@ def translate():
 
         for d in range(3):
             j = d*3
-            j += i
 
-            """
             x1 = justcoordinates[j]
             y1 = justcoordinates[j+1]
             z1 = justcoordinates[j+2]
@@ -88,7 +86,8 @@ def translate():
                     store[j] = intercepts["x1"]
                     store[j+1] = intercepts["y1"]
                     store[j+2] = intercepts["z1"]
-            """
+
+            j += i
 
             allcoordinates.append(math.floor(store[j]*(camera["focallength"]/store[2+j]))+screen["x"]/2)
             allcoordinates.append(math.floor(store[1+j]*(camera["focallength"]/store[2+j]))+screen["y"]/2)
@@ -96,6 +95,7 @@ def translate():
         allcoordinates.append(store[i+10])
 
 def draw():
+    window.fill(0)
     alldistances.sort(reverse = True)
     for n in range(len(alldistances)):
         i = allcoordinates.index(alldistances[n])-6
@@ -104,11 +104,28 @@ def draw():
 running = True
 
 while running: 
+    keys = pygame.key.get_pressed()
+
     for event in pygame.event.get(): 
         if event.type == pygame.QUIT: 
             running = False
 
-    window.fill(0)
+    if keys[pygame.K_w]:
+        camera["x"] += camera["speed"] * math.sin(camera["rotx"])
+        camera["z"] -= camera["speed"] * math.cos(camera["rotx"])
+    if keys[pygame.K_s]:
+        camera["x"] -= camera["speed"] * math.sin(camera["rotx"])
+        camera["z"] += camera["speed"] * math.cos(camera["rotx"])
+    if keys[pygame.K_a]:
+        camera["x"] -= camera["speed"] * math.cos(camera["rotx"])
+        camera["z"] -= camera["speed"] * math.sin(camera["rotx"])
+    if keys[pygame.K_d]:
+        camera["x"] += camera["speed"] * math.cos(camera["rotx"])
+        camera["z"] += camera["speed"] * math.sin(camera["rotx"])
+    if keys[pygame.K_SPACE]: camera["y"] += camera["speed"]
+    if keys[pygame.K_LSHIFT]: camera["y"] -= camera["speed"]
+
+    
     alldistances = []
     allcoordinates = []
     triangle(-1, 0, -5, -1, 2, -5, 1, 2, -5, (255, 0, 0))
