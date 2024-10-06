@@ -1,19 +1,23 @@
-import pygame 
+# copyright alex oliver 2024
+# enquiries: https://xelaoliver.github.io
+
+import pygame
 import math
 
 screen = {"x": 535, "y": 300, "fps": 60}
-camera = {"x": 0, "y": 0, "z": 0, "rotx": 0, "roty": 0, "speed": 1, "fov": 90}
+camera = {"x": 0, "y": 0, "z": 10, "rotx": 0, "roty": 0, "speed": .75, "fov": 90}
 camera["focallength"] = screen["x"]/2/math.tan(math.radians(camera["fov"])/2)
 allcoordinates = []
 alldistances = []
 vertdistances = []
 nearclippingplane = 0.001
+clock = pygame.time.Clock()
 
-fps = pygame.time.Clock()
+mouse_sensitivity = 0.003
 
-pygame.init() 
-window = pygame.display.set_mode((screen["x"], screen["y"])) 
-pygame.display.set_caption("chlorine")
+pygame.init()
+window = pygame.display.set_mode((screen["x"], screen["y"]))
+pygame.display.set_caption("C₁₀H₁₅N - alex oliver | press Esc to release mouse")
 
 def vert(x1, y1, z1):
     vertdistances.append(math.sqrt(math.pow(x1-camera["x"], 2) + math.pow(y1-camera["y"], 2) + math.pow(z1-camera["z"], 2)))
@@ -44,6 +48,11 @@ def triangle(x1, y1, z1, x2, y2, z2, x3, y3, z3, colour):
     vert(x2, y2, z2)
     vert(x3, y3, z3)
     vertdistance = (vertdistances[0]+vertdistances[1]+vertdistances[2])/3
+    while True:
+        if vertdistance in alldistances:
+            vertdistance += 0.0001
+        else:
+            break
     alldistances.append(vertdistance)
     allcoordinates.append(vertdistance)
     allcoordinates.append(colour)
@@ -72,24 +81,6 @@ def translate():
         for d in range(3):
             j = d*3
 
-            x1 = justcoordinates[j]
-            y1 = justcoordinates[j+1]
-            z1 = justcoordinates[j+2]
-            x2 = justcoordinates[(j+3) % len(justcoordinates)]
-            y2 = justcoordinates[(j+4) % len(justcoordinates)]
-            z2 = justcoordinates[(j+5) % len(justcoordinates)]
-            
-            if not(z1 >= nearclippingplane and z2 >= nearclippingplane or z1 < nearclippingplane and z2 < nearclippingplane):
-                intercepts = findxyintercept(x1, y1, z1, x2, y2, z2, nearclippingplane)
-                if z1 >= nearclippingplane:
-                    store[(j+3) % len(store)] = intercepts["x1"]
-                    store[(j+4) % len(store)] = intercepts["y1"]
-                    store[(j+5) % len(store)] = intercepts["z1"]
-                else:
-                    store[j] = intercepts["x1"]
-                    store[j+1] = intercepts["y1"]
-                    store[j+2] = intercepts["z1"]
-
             j += i
 
             allcoordinates.append(math.floor(zerodivision(store[j]*(camera["focallength"]), store[2+j]))+screen["x"]/2)
@@ -106,12 +97,39 @@ def draw():
 
 running = True
 
-while running: 
+mouse_locked = True
+pygame.event.set_grab(True)
+pygame.mouse.set_visible(False)
+
+while running:
     keys = pygame.key.get_pressed()
 
-    for event in pygame.event.get(): 
-        if event.type == pygame.QUIT: 
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
             running = False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                if mouse_locked:
+                    pygame.event.set_grab(False)
+                    pygame.mouse.set_visible(True)
+                    mouse_locked = False
+                else:
+                    pygame.event.set_grab(True)
+                    pygame.mouse.set_visible(False)
+                    mouse_locked = True
+
+        if event.type == pygame.MOUSEBUTTONDOWN and not mouse_locked:
+            pygame.event.set_grab(True)
+            pygame.mouse.set_visible(False)
+            mouse_locked = True
+
+    if mouse_locked:
+        mouse_movement = pygame.mouse.get_rel()
+        camera["rotx"] += mouse_movement[0]*mouse_sensitivity
+        camera["roty"] -= mouse_movement[1]*mouse_sensitivity
+
+        # camera["roty"] = max(min(camera["roty"], math.pi / 2), -math.pi / 2)
 
     if keys[pygame.K_w]:
         camera["x"] += camera["speed"] * math.sin(camera["rotx"])
@@ -127,18 +145,17 @@ while running:
         camera["z"] += camera["speed"] * math.sin(camera["rotx"])
     if keys[pygame.K_SPACE]: camera["y"] += camera["speed"]
     if keys[pygame.K_LSHIFT]: camera["y"] -= camera["speed"]
-    if keys[pygame.K_UP]: camera["roty"] += math.radians(camera["speed"])
-    if keys[pygame.K_DOWN]: camera["roty"] -= math.radians(camera["speed"])
-    if keys[pygame.K_LEFT]: camera["rotx"] -= math.radians(camera["speed"])
-    if keys[pygame.K_RIGHT]: camera["rotx"] += math.radians(camera["speed"])
 
-    
     alldistances = []
     allcoordinates = []
-    triangle(-1, 0, -5, -1, 2, -5, 1, 2, -5, (255, 0, 0))
-    triangle(-1, 0, -5, 1, 0, -5, 1, 2, -5, (0, 255, 0))
+    triangle(-1, 0, -1, -1, 0, 1, 1, 0, 1, (255, 0, 0)) # bottom
+    triangle(-1, 0, -1, 1, 0, -1, 1, 0, 1, (255, 0, 0))
+    triangle(-1, 0, -1, -1, 0, 1, 0, 2, 0, (0, 255, 0)) # left
+    triangle(1, 0, -1, 1, 0, 1, 0, 2, 0, (0, 0, 255)) # right
+    triangle(-1, 0, 1, 1, 0, 1, 0, 2, 0, (255, 255, 0)) # front
+    triangle(-1, 0, -1, 1, 0, -1, 0, 2, 0, (0, 255, 255)) # back
     translate()
     draw()
 
     pygame.display.flip()
-    fps.tick(screen["fps"])
+    clock.tick(screen["fps"])
