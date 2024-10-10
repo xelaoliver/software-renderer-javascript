@@ -7,32 +7,43 @@ var verticesDistances = [];
 var store = {x: null, y: null, z: null}
 
 function initializeVariables() {
-    verticesDistances = [];
-    triangleCoordinates = [];
-    translatedCoordinates = [];
-    store.x = null;
-    store.y = null;
-    store.z = null;
+  verticesDistances = [];
+  triangleCoordinates = [];
+  translatedCoordinates = [];
+  allDistances = [];
+  store.x = null;
+  store.y = null;
+  store.z = null;
 }
 
 function calculateVertex(vertexX, vertexY, vertexZ) {
-    vertexX += camera.xPosition;
-    vertexY += camera.yPosition;
-    vertexZ += camera.zPosition;
+  verticesDistances.push(Math.sqrt(Math.pow(vertexX-camera.xPosition, 2) + Math.pow(vertexY-camera.yPosition, 2) + Math.pow(vertexZ-camera.zPosition, 2)));
+  vertexX += camera.xPosition;
+  vertexY += camera.yPosition;
+  vertexZ += camera.zPosition;
 
-    verticesDistances.push(Math.sqrt(Math.pow(vertexX, 2) + Math.pow(vertexY, 2) + Math.pow(vertexZ, 2)));
+  store.x = vertexX;
+  store.z = vertexZ;
+  store.y = vertexY;
 
-    store.x = vertexX;
-    store.z = vertexZ;
-    store.y = vertexY;
+  vertexX = Math.sin(camera.xRotation)*store.z + Math.cos(camera.xRotation)*store.x;
+  store.z = Math.cos(camera.xRotation)*store.z - Math.sin(camera.xRotation)*store.x;
 
-    vertexX = Math.sin(camera.xRotation)*store.z + Math.cos(camera.xRotation)*store.x;
-    store.z = Math.cos(camera.xRotation)*store.z - Math.sin(camera.xRotation)*store.x;
+  vertexY = Math.sin(camera.yRotation)*store.z + Math.cos(camera.yRotation)*store.y;
+  vertexZ = Math.cos(camera.yRotation)*store.z - Math.sin(camera.yRotation)*store.y;
 
-    vertexY = Math.sin(camera.yRotation)*store.z + Math.cos(camera.yRotation)*store.y;
-    vertexZ = Math.cos(camera.yRotation)*store.z - Math.sin(camera.yRotation)*store.y;
+  triangleCoordinates.push(vertexX, vertexZ, vertexY);
+}
 
-    triangleCoordinates.push(vertexX, vertexZ, vertexY);
+function triangle(vertCoords1, vertCoords2, vertCoords3, colour) {
+  calculateVertex(vertCoords1[0], vertCoords1[1], vertCoords1[2]);
+  calculateVertex(vertCoords2[0], vertCoords2[1], vertCoords2[2]);
+  calculateVertex(vertCoords3[0], vertCoords3[1], vertCoords3[2]);
+  // const triangleDistance = (verticesDistances[0]+verticesDistances[1]+verticesDistances[2])/3;
+  const triangleDistance = verticesDistances.reduce((p, c) => c+p, 0)/verticesDistances.length;
+  triangleCoordinates.push(triangleDistance);
+  triangleCoordinates.push(colour);
+  allDistances.push(triangleDistance);
 }
 
 function returnZeroIfInfinity(int1, int2) {
@@ -44,19 +55,44 @@ function returnZeroIfInfinity(int1, int2) {
 }
 
 function translateTriangleCoordinates(amountOfTriangles, focalLength) {
-    for (let index = 0; index < amountOfTriangles; index += 3) {
+   var justTriangleCoordinates = [];
+  for (let index = 0; index < amountOfTriangles; index += 11) {
+    justTriangleCoordinates.push(
+      triangleCoordinates[index],
+      triangleCoordinates[index+1],
+      triangleCoordinates[index+2],
+      triangleCoordinates[index+3],
+      triangleCoordinates[index+4],
+      triangleCoordinates[index+5],
+      triangleCoordinates[index+6],
+      triangleCoordinates[index+7],
+      triangleCoordinates[index+8]
+    );
+  }
+  console.log("just", justTriangleCoordinates);
+    
+  for (let index = 0; index < justTriangleCoordinates.length; index += 3) {
+    store.x = justTriangleCoordinates[index]*returnZeroIfInfinity(focalLength, justTriangleCoordinates[index+2]);
+    store.y = justTriangleCoordinates[index+1]*returnZeroIfInfinity(focalLength, justTriangleCoordinates[index+2]);
 
-        store.x = triangleCoordinates[index]*returnZeroIfInfinity(focalLength, triangleCoordinates[index+2]);
-        store.y = triangleCoordinates[index+1]*returnZeroIfInfinity(focalLength, triangleCoordinates[index+2]);
+    translatedCoordinates.push(Math.floor(store.x+canvas.width/2), Math.floor(store.y+canvas.height/2));
+  }
+}
 
-        translatedCoordinates.push(Math.floor(store.x+canvas.width/2), Math.floor(store.y+canvas.height/2));
-    }
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let index = 0; index < allDistances; index++) {
+    coordinateIndex = index*3;
+    ctx.beginPath();
+    ctx.lineTo();
+    ctx.fill();
+  }
 }
 
 initializeVariables();
-calculateVertex(10, 0, 0);
-calculateVertex(-10, 0, 0);
-calculateVertex(0, 10, 0);
+triangle([-1, 0, 0], [1, 0, 0], [0, 2, 0], [255, 255, 255]);
+triangle([-1, 0, -5], [1, 0, -5], [0, 2, -5], [0, 255, 255]);
+console.log("produce coords:", triangleCoordinates);
 translateTriangleCoordinates(triangleCoordinates.length, (canvas.width/2)/Math.tan((camera.fov*Math.PI/180)/2));
-
-console.log(translatedCoordinates);
+console.log("Final coordinates: ", translatedCoordinates);
+// draw();
