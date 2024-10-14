@@ -1,8 +1,9 @@
 const ctx = document.getElementById('canvas').getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-var camera = {fov: 70, xPosition: 0, yPosition: 0, zPosition: -5, xRotation: 0, yRotation: 0, movementSpeed: 1}
+var camera = {fov: 70, xPosition: 0, yPosition: 0, zPosition: 5, xRotation: 0, yRotation: 0, movementSpeed: 1}
 var translatedCoordinates = [];
+var justTriangleCoordinates = [];
 var verticesDistances = [];
 var store = {x: null, y: null, z: null}
 
@@ -32,7 +33,7 @@ function calculateVertex(vertexX, vertexY, vertexZ) {
   vertexY = Math.sin(camera.yRotation)*store.z + Math.cos(camera.yRotation)*store.y;
   vertexZ = Math.cos(camera.yRotation)*store.z - Math.sin(camera.yRotation)*store.y;
 
-  triangleCoordinates.push(vertexX, vertexZ, vertexY);
+  triangleCoordinates.push(vertexX, -vertexY, vertexZ);
 }
 
 function triangle(vertCoords1, vertCoords2, vertCoords3, colour) {
@@ -47,15 +48,11 @@ function triangle(vertCoords1, vertCoords2, vertCoords3, colour) {
 }
 
 function returnZeroIfInfinity(int1, int2) {
-    if (int2 == 0) {
-        return 1;
-    } else {
-        return int1/int2;
-    }
+    return int2 === 0 ? 1 : int1 / int2;
 }
 
 function translateTriangleCoordinates(amountOfTriangles, focalLength) {
-   var justTriangleCoordinates = [];
+  justTriangleCoordinates = [];
   for (let index = 0; index < amountOfTriangles; index += 11) {
     justTriangleCoordinates.push(
       triangleCoordinates[index],
@@ -66,10 +63,9 @@ function translateTriangleCoordinates(amountOfTriangles, focalLength) {
       triangleCoordinates[index+5],
       triangleCoordinates[index+6],
       triangleCoordinates[index+7],
-      triangleCoordinates[index+8]
+      triangleCoordinates[index+8],
     );
   }
-  console.log("just", justTriangleCoordinates);
     
   for (let index = 0; index < justTriangleCoordinates.length; index += 3) {
     store.x = justTriangleCoordinates[index]*returnZeroIfInfinity(focalLength, justTriangleCoordinates[index+2]);
@@ -79,20 +75,36 @@ function translateTriangleCoordinates(amountOfTriangles, focalLength) {
   }
 }
 
+function indexOf(array, string) {
+  for (let index = 0; index < array.length; index ++) {
+    if (array[index] == string) {
+      return index;
+    }
+  }
+}
+
 function draw() {
+  allDistances.sort(function(a, b){return b-a});
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (let index = 0; index < allDistances; index++) {
-    coordinateIndex = index*3;
+  for (let index = 0; index < allDistances.length; index++) {
+    let coordinateIndex = (indexOf(triangleCoordinates, allDistances[index])-9)/11*6;
+    
     ctx.beginPath();
-    ctx.lineTo();
+    ctx.lineTo(translatedCoordinates[coordinateIndex], translatedCoordinates[coordinateIndex+1]);
+    ctx.lineTo(translatedCoordinates[coordinateIndex+2], translatedCoordinates[coordinateIndex+3]);
+    ctx.lineTo(translatedCoordinates[coordinateIndex+4], translatedCoordinates[coordinateIndex+5]);
+    /*
+    console.log(1, translatedCoordinates[coordinateIndex], translatedCoordinates[coordinateIndex+1]);
+    console.log(2, translatedCoordinates[coordinateIndex+2], translatedCoordinates[coordinateIndex+3]);
+    console.log(3, translatedCoordinates[coordinateIndex+4], translatedCoordinates[coordinateIndex+5]);
+    */
+    ctx.fillStyle = "rgb("+triangleCoordinates[((coordinateIndex*11)/6)+10][0]+" "+triangleCoordinates[((coordinateIndex*11)/6)+10][1]+" "+triangleCoordinates[((coordinateIndex*11)/6)+10][2]+")";
     ctx.fill();
   }
 }
 
 initializeVariables();
-triangle([-1, 0, 0], [1, 0, 0], [0, 2, 0], [255, 255, 255]);
-triangle([-1, 0, -5], [1, 0, -5], [0, 2, -5], [0, 255, 255]);
-console.log("produce coords:", triangleCoordinates);
+triangle([-1, 0, 0], [1, 0, 0], [0, 2, 0], [255, 0, 0]);
+triangle([0, 0, 1], [2, 0, 1], [1, 2, 1], [0, 0, 255]);
 translateTriangleCoordinates(triangleCoordinates.length, (canvas.width/2)/Math.tan((camera.fov*Math.PI/180)/2));
-console.log("Final coordinates: ", translatedCoordinates);
-// draw();
+draw();
