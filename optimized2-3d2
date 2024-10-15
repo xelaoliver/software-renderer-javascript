@@ -1,7 +1,7 @@
 const ctx = document.getElementById('canvas').getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-var camera = {fov: 70, xPosition: 0, yPosition: 0, zPosition: 5, xRotation: 0, yRotation: 0, movementSpeed: 1}
+var camera = {fov: 70, xPosition: 0, yPosition: 0, zPosition: 10, xRotation: 0, yRotation: 0, movementSpeed: 1}
 var translatedCoordinates = [];
 var justTriangleCoordinates = [];
 var verticesDistances = [];
@@ -40,7 +40,6 @@ function triangle(vertCoords1, vertCoords2, vertCoords3, colour) {
   calculateVertex(vertCoords1[0], vertCoords1[1], vertCoords1[2]);
   calculateVertex(vertCoords2[0], vertCoords2[1], vertCoords2[2]);
   calculateVertex(vertCoords3[0], vertCoords3[1], vertCoords3[2]);
-  // const triangleDistance = (verticesDistances[0]+verticesDistances[1]+verticesDistances[2])/3;
   const triangleDistance = verticesDistances.reduce((p, c) => c+p, 0)/verticesDistances.length;
   triangleCoordinates.push(triangleDistance);
   triangleCoordinates.push(colour);
@@ -49,6 +48,64 @@ function triangle(vertCoords1, vertCoords2, vertCoords3, colour) {
 
 function returnZeroIfInfinity(int1, int2) {
     return int2 === 0 ? 1 : int1 / int2;
+}
+
+/*
+function clipTriangleCoordinatesNegativeX(polygon, line) {
+  let clippedPolygon = [];
+  for (let i = 0; i < polygon.length; i += 2) {
+    let x1 = polygon[i];
+    let y1 = polygon[i + 1];
+    let x2 = polygon[(i + 2) % polygon.length];
+    let y2 = polygon[(i + 3) % polygon.length];
+
+    if (x1 > line && x2 > line) {
+      clippedPolygon.push(x1, y1);
+    } else if (x1 <= line && x2 <= line) {
+      // Skip the entire edge
+    } else {
+      let interceptY = findIntercept(x1, y1, x2, y2, line);
+      if (x1 > line) {
+        clippedPolygon.push(x1, y1);
+        clippedPolygon.push(line, interceptY);
+      } else {
+        clippedPolygon.push(line, interceptY);
+        clippedPolygon.push(x2, y2);
+      }
+    }
+  }
+  return clippedPolygon;
+}
+*/
+
+function findIntercept(x1, y1, x2, y2, line) {
+  return y1+((y2-y1)/(x2-x1))*(line-x1);
+}
+
+function clipTriangleCoordinatesNegativeX(polygon, line) {
+  let clippedTriangleCoordinates = [];
+
+  for (let index = 0; index < polygon.length; index += 2) {
+    let store = {"x1": polygon[index], "y1": polygon[index+1], "x2": polygon[(index+2) % polygon.length], "y2": polygon[(index+3) % polygon.length]};
+
+    if (store.x1 > line && store.x2 > line) {
+      clippedTriangleCoordinates.push(store.x2, store.y2);
+      clippedTriangleCoordinates.push(store.x1, store.y1);
+    } else if (store.x1 < line && store.x2 < line) {
+      continue;
+    } else {
+      if (store.x1 > line) {
+        clippedTriangleCoordinates.push(store.x1, store.y1);
+        clippedTriangleCoordinates.push(Math.floor(line), findIntercept(store.x1, store.y1, store.x2, store.y2, line));
+      } else {
+        clippedTriangleCoordinates.push(Math.floor(line), findIntercept(store.x1, store.y1, store.x2, store.y2, line));
+        clippedTriangleCoordinates.push(store.x2, store.y2);
+      }
+    }
+    console.log(store.x1, store.y1, store.x2, store.y2);
+    // console.log(line, findIntercept(store.x1, store.y1, store.x2, store.y2, line));
+  }
+  return clippedTriangleCoordinates;
 }
 
 function translateTriangleCoordinates(amountOfTriangles, focalLength) {
@@ -66,13 +123,22 @@ function translateTriangleCoordinates(amountOfTriangles, focalLength) {
       triangleCoordinates[index+8],
     );
   }
-    
-  for (let index = 0; index < justTriangleCoordinates.length; index += 3) {
-    store.x = justTriangleCoordinates[index]*returnZeroIfInfinity(focalLength, justTriangleCoordinates[index+2]);
-    store.y = justTriangleCoordinates[index+1]*returnZeroIfInfinity(focalLength, justTriangleCoordinates[index+2]);
+  
+  for (let index = 0; index < (amountOfTriangles/11)*9; index+=3) {
+    const key = index;
+    store.x = justTriangleCoordinates[key]*returnZeroIfInfinity(focalLength, justTriangleCoordinates[key+2]);
+    store.y = justTriangleCoordinates[key+1]*returnZeroIfInfinity(focalLength, justTriangleCoordinates[key+2]);
 
     translatedCoordinates.push(Math.floor(store.x+canvas.width/2), Math.floor(store.y+canvas.height/2));
   }
+}
+
+function clipTranslatedTriangleCoordinates() {
+  ctx.beginPath();
+  ctx.lineTo(canvas.width/2, 0);
+  ctx.lineTo(canvas.width/2, canvas.height);
+  ctx.stroke();
+  translatedCoordinates = clipTriangleCoordinatesNegativeX(translatedCoordinates, canvas.width/2);
 }
 
 function indexOf(array, string) {
@@ -85,7 +151,7 @@ function indexOf(array, string) {
 
 function draw() {
   allDistances.sort(function(a, b){return b-a});
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // ctx.clearRect(0, 0, canvas.width, canvas.height);
   for (let index = 0; index < allDistances.length; index++) {
     let coordinateIndex = (indexOf(triangleCoordinates, allDistances[index])-9)/11*6;
     
@@ -103,8 +169,13 @@ function draw() {
   }
 }
 
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
 initializeVariables();
-triangle([-1, 0, 0], [1, 0, 0], [0, 2, 0], [255, 0, 0]);
-triangle([0, 0, 1], [2, 0, 1], [1, 2, 1], [0, 0, 255]);
+// triangle([-1, 0, 0], [1, 0, 0], [0, 2, 0], [255, 0, 0]);
+triangle([-0.5, 0, 1], [1.5, 0, 1], [0.5, 2, 1], [0, 0, 255]);
 translateTriangleCoordinates(triangleCoordinates.length, (canvas.width/2)/Math.tan((camera.fov*Math.PI/180)/2));
+console.log(translatedCoordinates);
+clipTranslatedTriangleCoordinates();
+console.log(translatedCoordinates);
 draw();
