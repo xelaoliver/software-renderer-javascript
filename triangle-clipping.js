@@ -20,8 +20,12 @@ function clipX(triangle, x) {
     return clippedTriangle;
 }
 
-polygon = [0, 0, 10, 0, 5, 10];
+polygon = [1.5, 0, 6.5, 0, 3.5, 5];
 
 console.log(polygon); 
-polygon = clipX(polygon, 5);
-console.log(polygon);
+
+var clippedPolygon = [];
+for (let index = 0; index < polygon.length/6; index++){
+   clippedPolygon = clippedPolygon.concat(clipX(polygon.slice(index, index+6), 5));
+}
+console.log(clippedPolygon);
