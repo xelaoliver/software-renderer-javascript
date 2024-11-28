@@ -7,6 +7,7 @@ items:
 - obj-file-formatter.py // formats .obj files in a way my software recognises them
 - INDEV-optimized-script.js // optimized script.js
 - optimized2-3d2.js // better optimized INDEV-optimized-script.js
+- 3D-retake.js // making this an api
 
 extras:
 
