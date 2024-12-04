@@ -1,18 +1,16 @@
 const ctx = document.getElementById('canvas').getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-var camera = {"x": 0, "y": 0, "z": 0, "xRotation": 0, "yRotation": 0, "fov": 400, "speed": 5};
+var camera = {"x": 0, "y": 0, "z": 30, "xRotation": 0, "yRotation": 0, "fov": 400, "speed": 5};
 var triangleDistances = []; var calculatedTriangleData = []; var triangle = [];
 var movementBools = [false, false, false, false, false, false, false, false, false, false];
 
 const triangles = [
-	[-5, 0, -50, 5, 0, -50, 0, 10, -50, "#FF0000"],
-	[0, 0, -20, 10, 0, -20, 5, 10, -20, "#0000FF"]
+	[-5, 0, -110, 5, 0, -110, 0, 10, -110, "#FF0000"],
+	[0, 0, -80, 10, 0, -80, 5, 10, -80, "#0000FF"]
 ]
 
 function calculateVertex(x1, y1, z1) {
-	triangleDistances.push(Math.sqrt(Math.pow(x1-camera.x, 2)+Math.pow(y1-camera.y, 2)+Math.pow(z1-camera.z, 2)));
-
 	x1 += camera.x;
 	y1 -= camera.y;
 	z1 += camera.z;
@@ -30,6 +28,8 @@ function calculateVertex(x1, y1, z1) {
 	
 	y1 = newY1;
 	z1 = newZ1;
+
+  triangleDistances.push(Math.sqrt(Math.pow(x1-camera.x, 2)+Math.pow(y1-camera.y, 2)+Math.pow(z1-camera.z, 2)));
   
 	triangle.push(x1); triangle.push(y1); triangle.push(z1);
 }
@@ -76,6 +76,11 @@ function keydown(evt) {
 		
 		case 32: movementBools[4] = true; break; // space key
 		case 16: movementBools[5] = true; break; // shift key
+
+    case 38: movementBools[6] = true; break; // up arrow
+    case 40: movementBools[7] = true; break; // down arrow
+    case 37: movementBools[8] = true; break; // left arrow
+    case 39: movementBools[9] = true; break; // right arrow
 	}
 }
 
@@ -88,6 +93,11 @@ function keyup(evt) {
 		
 		case 32: movementBools[4] = false; break; // space key
 		case 16: movementBools[5] = false; break; // shift key
+
+    case 38: movementBools[6] = false; break; // up arrow
+    case 40: movementBools[7] = false; break; // down arrow
+    case 37: movementBools[8] = false; break; // left arrow
+    case 39: movementBools[9] = false; break; // right arrow
 	}
 }
 
@@ -111,12 +121,18 @@ function controll() {
 		camera.x += camera.speed*Math.cos(camera.xRotation);
 		camera.z += camera.speed*Math.sin(camera.xRotation);
 	}
+  
 	if (movementBools[4]) {
 		camera.y += camera.speed;
 	}
 	if (movementBools[5]) {
 		camera.y -= camera.speed;
 	}
+
+  if (movementBools[6]) {camera.yRotation += camera.speed*(Math.PI/360)};
+  if (movementBools[7]) {camera.yRotation -= camera.speed*(Math.PI/360)};
+  if (movementBools[8]) {camera.xRotation += camera.speed*(Math.PI/360)};
+  if (movementBools[9]) {camera.xRotation -= camera.speed*(Math.PI/360)};
 }
 
 function main() {
