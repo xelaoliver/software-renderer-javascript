@@ -2,7 +2,7 @@ const ctx = document.getElementById('canvas').getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
 var camera = {"x": 0, "y": 40, "z": -40, "xRotation": 0, "yRotation": -.8, "fov": 400, "speed": 3.5};
-var triangleDistances = []; var calculatedTriangleData = []; var triangle = []; var distanceAverage = []; var triangleCoordinates = [];
+var triangleDistances = []; var calculatedTriangleData = []; var triangle = []; var distanceAverage = []; var triangleCoordinates = []; var calculatedBulletinData = [];
 var movementBools = [false, false, false, false, false, false, false, false, false, false];
 
 const triangles = [
@@ -12,6 +12,11 @@ const triangles = [
 	[-5, 0, 5, -5, 0, -5, 0, 10, 0,"#00FFFF"],
 	[5, 0, -5, 5, 0, 5, 0, 10, 0,"#FF00FF"]
 ]
+
+const bulletins = [
+  [0, 10, 0, "#FF0000"]
+]
+
 var triangleRotation = 0;
 
 function calculateVertex(x1, y1, z1) {
@@ -98,19 +103,45 @@ function calculateTriangle(triangleData) {
 		}
 		
 		triangle.push(distanceAverage/triangleDistances.length);
+    triangle.unshift("vec");
 		calculatedTriangleData.push(triangle);
 	}
 	return calculatedTriangleData;
 }
 
+function calculateBulletins(bulletinData) {
+  calculatedBulletinData = [];
+  for (index = 0; index < bulletinData.length; index ++) {
+    triangleCoordinates = [];
+    triangleDistances = [];
+    triangle = [];
+    
+    calculateVertex(bulletinData[index][0], bulletinData[index][1], bulletinData[index][2]);
+    if (triangleCoordinates[2] < .1) {
+      calculatedBulletinData.push(triangle);
+    } else {
+      continue;
+    }
+  }
+  return calculatedBulletinData;
+}
+
 function drawTriangles(triangleData) {
+  console.log(triangleData);
+  
 	triangleData.sort((a, b) => b[b.length-1] - a[a.length-1]);
 
 	for (let index = 0; index < triangleData.length; index++) {
 		var selected = triangleData[index];
 		ctx.beginPath();
 		for (let translateIndex = 0; translateIndex < selected.length-2; translateIndex += 3) {
-		  ctx.lineTo((selected[translateIndex]*(camera.fov/selected[translateIndex+2]))+canvas.width/2, (selected[translateIndex+1]*(camera.fov/selected[translateIndex + 2]))+canvas.height/2);
+      if (selected[translateIndex] == "bul") {
+        let x = (selected[translateIndex+1]*(camera.fov/selected[translateIndex+3]))+canvas.width/2;
+        let y = (selected[translateIndex+2]*(camera.fov/selected[translateIndex+3]))+canvas.height/2;
+        ctx.beginPath(); ctx.rect(x-5, y-5, x+5, y+5); ctx.fillStyle = selected[translateIndex+4]; ctx.fill();
+      } else {
+		    ctx.lineTo((selected[translateIndex+1]*(camera.fov/selected[translateIndex+3]))+canvas.width/2, (selected[translateIndex+2]*(camera.fov/selected[translateIndex+3]))+canvas.height/2);
+      }
 		}
 		ctx.closePath();
 		ctx.fillStyle = selected[selected.length-2];
@@ -193,10 +224,12 @@ function main() {
 	ctx.clip();
 	
 	controll();
-
-	drawTriangles(calculateTriangle(triangles));
+  
+	drawTriangles(calculateTriangle(triangles).concat(calculateBulletins(bulletins)));
 
 	triangleRotation += 0.01;
 }
 
-setInterval(function() { main() }, 1000/60);
+main();
+
+// setInterval(function() { main() }, 1000/60);
