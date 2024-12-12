@@ -251,7 +251,7 @@ function main() {
     if (bulletins[index][1] > random(50, 90)) {
       bulletins[index] = [0, 0, "#000000"];
     } else {
-      bulletins[index][1] += 1;
+      bulletins[index][1] += random(.25, .5);
     }
   }
 }
