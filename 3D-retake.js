@@ -1,11 +1,12 @@
 const ctx = document.getElementById('canvas').getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-var camera = {"x": 0, "y": 40, "z": -40, "xRotation": 0, "yRotation": -.5, "fov": 400, "speed": 3.5};
+var camera = {"x": 0, "y": 40, "z": -90, "xRotation": 0, "yRotation": 0.1, "fov": 400, "speed": 3.5};
 var triangleDistances = []; var calculatedTriangleData = []; var triangle = []; var distanceAverage = []; var triangleCoordinates = []; var calculatedBulletinData = [];
 var movementBools = [false, false, false, false, false, false, false, false, false, false];
 
 const triangles = [
+  [-50, 0, -50, 50, 0, -50, 50, 0, 50, -50, 0, 50, "#007e7d"],
 	[-5, 0, -5, 5, 0, -5, 5, 0, 5, -5, 0, 5, "#00FF00"],
 	[-5, 0, -5, 5, 0, -5, 0, 10, 0,"#0000FF"],
 	[-5, 0, 5, 5, 0, 5, 0, 10, 0,"#FFFF00"],
@@ -13,20 +14,22 @@ const triangles = [
 	[5, 0, -5, 5, 0, 5, 0, 10, 0,"#FF00FF"]
 ]
 
-const bulletins = [
-	[0, 20, 0, "#FF0000"]
-]
+var bulletins = [];
 
 var time = 0;
 
 function calculateVertex(x1, y1, z1) {
 	let newX1, newY1, newZ1;
 
+  /*
+
 	newX1 = Math.sin(time)*z1 + Math.cos(time)*x1;
 	newZ1 = Math.cos(time)*z1 - Math.sin(time)*x1;
 	
 	x1 = newX1;
 	z1 = newZ1;
+
+  */
   
 	x1 += camera.x;
 	y1 -= camera.y;
@@ -133,7 +136,6 @@ function calculateBulletins(bulletinData) {
 }
 
 function drawTriangles(triangleData) {
-  
 	triangleData.sort((a, b) => b[b.length-1] - a[a.length-1]);
 
 	for (let index = 0; index < triangleData.length; index++) {
@@ -227,6 +229,10 @@ function controll() {
 	if (movementBools[9]) {camera.xRotation -= camera.speed*(Math.PI/360)};
 }
 
+function random(min, max) {
+  return Math.random()*(max-min)+min;
+}
+
 function main() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.beginPath();
@@ -238,8 +244,16 @@ function main() {
 	drawTriangles(calculateTriangle(triangles).concat(calculateBulletins(bulletins)));
 
 	time += 0.01;
-}
 
-// main();
+  bulletins.push([random(-5, 5), 10, random(-5, 5), "#FF0000"]);
+
+  for (let index = 0; index < bulletins.length; index ++) {
+    if (bulletins[index][1] > random(50, 90)) {
+      bulletins[index] = [0, 0, "#000000"];
+    } else {
+      bulletins[index][1] += 1;
+    }
+  }
+}
 
 setInterval(function() { main() }, 1000/60);
