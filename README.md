@@ -16,3 +16,6 @@ extras:
 - star-ship.txt // a format of tester-ship.obj by the 1st version of obj-file-formatter.py
 - chlorine.py // i want to put this on machines w/python
 - triangle-clipping.js // testing triangle clipping
+
+
+This repository includes all of my 3D related projects that I have created in 2024 and during the fist months of 2025.
