@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>xela - monopoly w/capitalism</title>
+    <style>
+      #spinner {
+        animation-name: spinner;
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
+        animation-duration: 3s;
+        transform-style: preserve-3d;
+        transform-origin: center center;
+        text-align: center;
+        display: absolute;
+        margin: auto;
+      }
+
+      @keyframes spinner {
+        from {
+          transform: rotateY(0deg);
+        }
+        to {
+          transform: rotateY(-360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="spinner" width="600">alex's capitalistic monopoly</div><br>
+    <canvas id="canvas" width="600" height="450" style="border: 1px solid #000000"></canvas>
+    <script src="script.js"></script>
+  </body>
+</html>
