@@ -2,6 +2,45 @@ const ctx = document.getElementById("canvas").getContext("2d");
 
 var rotation = {"x": 0, "y": -.3}
 var calculatedPolygon = [];
+var calculatedDistance = [];
+
+var polygons = [
+	[[18.9, 0, 18.9], [-18.9, 0, 18.9], [-18.9, 0, -18.9], [18.9, 0, -18.9], [18.9, 0, 18.9], "#CBE7D0"], // main board
+	[[25.4, 0, 25.4], [18.9, 0, 25.4], [18.9, 0, 18.9], [25.4, 0, 18.9], [25.4, 0, 25.4], "#FFFFFF"], // goto jail
+	[[-25.4, 0, 25.4], [-18.9, 0, 25.4], [-18.9, 0, 18.9], [-25.4, 0, 18.9], [-25.4, 0, 25.4], "#FFFFFF"], // free parking
+	[[-25.4, 0, -25.4], [-18.9, 0, -25.4], [-18.9, 0, -18.9], [-25.4, 0, -18.9], [-25.4, 0, -25.4], "#FFFFFF"], // jail
+	[[25.4, 0, -25.4], [18.9, 0, -25.4], [18.9, 0, -18.9], [25.4, 0, -18.9], [25.4, 0, -25.4], "#FFFFFF"], // go
+];
+
+const streets = [
+	["#a8e1fb", "#a8e1fb", "#FFFFFF", "#a8e1fb", "#FFFFFF", "#FFFFFF", "#995334", "#FFFFFF", "#995334"],
+	["#0071c5", "#FFFFFF", "#0071c5", "#FFFFFF", "#FFFFFF", "#22b25a", "#FFFFFF", "#22b25a", "#22b25a"],
+	["#fef200", "#FFFFFF", "#fef200", "#fef200", "#FFFFFF", "#ec1a21", "#ec1a21", "#FFFFFF", "#ec1a21"],
+	["#f6951d", "#f6951d", "#FFFFFF", "#f6951d", "#FFFFFF", "#db3798", "#db3798", "#FFFFFF", "#db3798"]
+];
+
+// calculate all streets. what a task that can be just done once and pasted into the polygon array to be a const! >:P
+
+for (let index = 0; index < 9; index ++) {
+	let factor = index*4.2;
+	polygons.push([[-18.9+factor, 0, -20.8], [-18.9+factor+4.2, 0, -20.8], [-18.9+factor+4.2, 0, -25.4], [-18.9+factor, 0, -25.4], [-18.9+factor, 0, -25.4], streets[0][index]]);
+	polygons.push([[-18.9+factor, 0, -18.9], [-18.9+factor+4.2, 0, -18.9], [-18.9+factor+4.2, 0, -20.8], [-18.9+factor, 0, -20.8], [-18.9+factor, 0, -20.8], streets[0][index]]);
+}
+for (let index = 0; index < 9; index ++) {
+	let factor = index*4.2;
+	polygons.push([[-18.9+factor, 0, 20.8], [-18.9+factor+4.2, 0, 20.8], [-18.9+factor+4.2, 0, 25.4], [-18.9+factor, 0, 25.4], [-18.9+factor, 0, 25.4], streets[2][index]]);
+	polygons.push([[-18.9+factor, 0, 18.9], [-18.9+factor+4.2, 0, 18.9], [-18.9+factor+4.2, 0, 20.8], [-18.9+factor, 0, 20.8], [-18.9+factor, 0, 20.8], streets[2][index]]);
+}
+for (let index = 0; index < 9; index ++) {
+	let factor = index*4.2;
+	polygons.push([[-25.4, 0, -18.9+factor], [-20.8, 0, -18.9+factor], [-20.8, 0, -18.9+factor+4.2], [-25.4, 0, -18.9+factor+4.2], [-25.4, 0, -18.9+factor], streets[3][index]]);
+	polygons.push([[-20.8, 0, -18.9+factor], [-18.9, 0, -18.9+factor], [-18.9, 0, -18.9+factor+4.2], [-20.8, 0, -18.9+factor+4.2], [-20.8, 0, -18.9+factor], streets[3][index]]);
+}
+for (let index = 0; index < 9; index ++) {
+	let factor = index*4.2;
+	polygons.push([[25.4, 0, -18.9+factor], [20.8, 0, -18.9+factor], [20.8, 0, -18.9+factor+4.2], [25.4, 0, -18.9+factor+4.2], [25.4, 0, -18.9+factor], streets[1][index]]);
+	polygons.push([[20.8, 0, -18.9+factor], [18.9, 0, -18.9+factor], [18.9, 0, -18.9+factor+4.2], [20.8, 0, -18.9+factor+4.2], [20.8, 0, -18.9+factor], streets[1][index]]);
+}
 
 function calculateVertex(x, y, z) {
 	let nX, nY, nZ;
@@ -16,27 +55,34 @@ function calculateVertex(x, y, z) {
 
 	y = nY; z = nZ;
 
-	z += 40;
+	z += 70;
 
 	return [x, y, z];
 }
 
-const polygons = [[[10, 0, 10], [-10, 0, 10], [-10, 0, -10], [10, 0, -10], [10, 0, 10], "rgba(203, 231, 208, .5)"], [[10, 10, 10], [-10, 10, 10], [-10, 10, -10], [10, 10, -10], [10, 10, 10], "rgba(999, 0, 0, .5)"]];
-
 function calculateAll() {
-	calculatedPolygon = [];
-	for (let polygonIndex = 0; polygonIndex < polygons.length; polygonIndex ++) {
-		calculatedPolygon.push([]);
-		for (let vertexIndex = 0; vertexIndex < polygons[polygonIndex].length-1; vertexIndex ++) {
-			let item = polygons[polygonIndex][vertexIndex];
-			calculatedPolygon[polygonIndex].push(calculateVertex(item[0], item[1], item[2]));
-		}
-		calculatedPolygon[polygonIndex].push(polygons[polygonIndex][polygons[polygonIndex].length-1]);
-		// todo: add distance formula for polygon sorting ig? - Math.sqrt(Math.pow(x-x, 2)+Math.pow(y-y, 2)+Math.pow(z-z, 2));
-	}
-	rotation.x += .02;
-	rotation.y = Math.sin(rotation.x)*.5;
+    calculatedPolygon = [];
+    calculatedDistance = [];
+    for (let polygonIndex = 0; polygonIndex < polygons.length; polygonIndex++) {
+        let avgDepth = 0;
+        calculatedPolygon.push([]);
+        for (let vertexIndex = 0; vertexIndex < polygons[polygonIndex].length - 1; vertexIndex++) {
+            let item = polygons[polygonIndex][vertexIndex];
+            let vertex = calculateVertex(item[0], item[1], item[2]);
+            avgDepth += vertex[2];
+            calculatedPolygon[polygonIndex].push(vertex);
+        }
+        avgDepth /= polygons[polygonIndex].length-1;
+        calculatedDistance.push({index: polygonIndex, depth: avgDepth});
+        calculatedPolygon[polygonIndex].push(polygons[polygonIndex][polygons[polygonIndex].length-1]);
+    }
+    calculatedDistance.sort((a, b) => b.depth-a.depth);
+    calculatedPolygon = calculatedDistance.map(item => calculatedPolygon[item.index]);
+
+    rotation.x += .02;
+    rotation.y = Math.sin(rotation.x)*0.5;
 }
+
 
 function drawAll() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
