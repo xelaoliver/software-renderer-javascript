@@ -8,6 +8,7 @@ items:
 - INDEV-optimized-script.js // optimized script.js
 - optimized2-3d2.js // better optimized INDEV-optimized-script.js
 - 3D-retake.js // making this an api
+- monopoly.js & monopoly-index.html // a monopoly but with capitalism game that I'm trying to finish in 2-3 weeks
 
 extras:
 
