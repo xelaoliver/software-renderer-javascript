@@ -3,31 +3,60 @@
   <head>
     <title>xela - monopoly w/capitalism</title>
     <style>
-      #spinner {
-        animation-name: spinner;
-        animation-timing-function: linear;
-        animation-iteration-count: infinite;
-        animation-duration: 3s;
-        transform-style: preserve-3d;
-        transform-origin: center center;
-        text-align: center;
-        display: absolute;
-        margin: auto;
-      }
-
-      @keyframes spinner {
-        from {
-          transform: rotateY(0deg);
-        }
-        to {
-          transform: rotateY(-360deg);
-        }
+      div {
+        display: inline-block;
       }
     </style>
   </head>
   <body>
-    <div id="spinner" width="600">alex's capitalistic monopoly</div><br>
-    <canvas id="canvas" width="600" height="450" style="border: 1px solid #000000"></canvas>
+    <canvas id="canvas" width="800" height="600"></canvas><br>
+
+    Money: £<span id="money"></span><br>
+    Streets owned: <div id="streets"></div><br>
+    Game commands:
+    <button onclick="buy('street')">Buy street</button>
+    <button onclick="buy('house')">Buy a house</button>
+    <button onclick="buy('hotel')">Buy a hotel</button>
+    <button onclick="rollDice()">Roll the dice</button>
+    Debug commands:
+    <button onclick="rollDice(true)">Move 1</button>
+    <button onclick="feature('askew')">Askew</button>
+    <button onclick="feature('topdown')">Topdown</button>
+    <button onclick="feature()">Reset</button>
+    Spin: <input type="checkbox" id="spin" onclick="feature('spin')">
+
     <script src="script.js"></script>
+
+    <br><br>
+
+    <!-- Static HTML street template
+    <div style="border: 1px solid black; width: 150px; padding: 3px;">
+      <div style="background-color: #c47743; width: 150px; text-align: center;"><div style="font-size: 11px;">TITLE DEED</div><br>Old Kent Road</div>
+      Rent<div style="float: right">£26</div><br>
+      Rent with set<div style="float: right">£52</div><br>
+      Rent with 1 H<div style="float: right">£130</div><br>
+      Rent with 2 H<div style="float: right">£390</div><br>
+      Rent with 3 H<div style="float: right">£900</div><br>
+      Rent with 4 H<div style="float: right">£1100</div><br>
+      Rent with an H<div style="float: right">£1275</div><br>
+      <hr>
+      Houses cost<div style="float: right">£200</div>
+      Hotels cost<div style="float: right">£200</div>
+    </div>
+  -->
+
+    <div style="border: 1px solid black; width: 150px; padding: 3px;">
+      <div style="background-color: #c47743; width: 150px; text-align: center;" id="header"><div style="font-size: 11px;">TITLE DEED</div><br><div id="streetName"></div></div>
+      Rent<div style="float: right" id="rent"></div><br>
+      Rent with set<div style="float: right" id="setRent"></div><br>
+      Rent with 1 H<div style="float: right" id="1HRent"></div><br>
+      Rent with 2 H<div style="float: right" id="2HRent"></div><br>
+      Rent with 3 H<div style="float: right" id="3HRent"></div><br>
+      Rent with 4 H<div style="float: right" id="4HRent"></div><br>
+      Rent with an H<div style="float: right" id="anHRent"></div><br>
+      <hr>
+      Houses cost<div style="float: right" id="hCost"></div><br>
+      Hotels cost<div style="float: right" id="anHCost"></div>
+    </div>
   </body>
 </html>
