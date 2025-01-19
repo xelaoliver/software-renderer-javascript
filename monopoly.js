@@ -147,7 +147,7 @@ function calculatePolygons() {
 	calculatedPolygon = calculatedDistance.map(item => calculatedPolygon[item.index]);
 
 	if (rotation.spin) {
-		rotation.x += .02;
+		rotation.x += .01;
 		rotation.y = (Math.sin(rotation.x)*.75)-.75;
 	}
 }
@@ -183,25 +183,41 @@ function drawAll() {
 	}
 }
 
+function movePlayerPosition(coordinate, value, amount) {
+    let step = value/20;
+    let index = 0;
+
+    function animate() {
+        if (index < 20) {
+            polygons[5][0][coordinate] += step*amount;
+			polygons[5][0][1] = -Math.abs(Math.sin(index/6)*5);
+            index ++;
+            requestAnimationFrame(animate);
+        }
+    }
+
+    animate();
+}
+
 function movePlayer(random) {
 	if (playerPosition == 1 || playerPosition == 10) {
-		polygons[5][0][0] -= 5.35*random; return;
+		movePlayerPosition(0, -5.35, random); return;
 	} else if (playerPosition == 11 || playerPosition == 20) {
-		polygons[5][0][2] += 5.35*random; return;
+		movePlayerPosition(2, 5.35, random); return;
 	} else if (playerPosition == 21 || playerPosition == 30) {
-		polygons[5][0][0] += 5.35*random; return;
+		movePlayerPosition(0, 5.35, random); return;
 	} else if (playerPosition == 40 || playerPosition == 31) {
-		polygons[5][0][2] -= 5.35*random; return;
+		movePlayerPosition(2, -5.35, random); return;
 	}
 
 	if (playerPosition < 11 && playerPosition > 1) {
-		polygons[5][0][0] -= 4.2*random; return;
+		movePlayerPosition(0, -4.2, random); return;
 	} else if (playerPosition < 20 && playerPosition > 10) {
-		polygons[5][0][2] += 4.2*random; return;
+		movePlayerPosition(2, 4.2, random); return;
 	} else if (playerPosition < 30 && playerPosition > 20) {
-		polygons[5][0][0] += 4.2*random; return;
+		movePlayerPosition(0, 4.2, random); return;
 	} else if (playerPosition < 40 && playerPosition > 30) {
-		polygons[5][0][2] -= 4.2*random; return;
+		movePlayerPosition(2, -4.2, random); return;
 	}
 }
 
@@ -238,7 +254,7 @@ function feature(argument) {
 		rotation.spin = false;
 		document.getElementById("spin").checked = false;
 	} else if (argument == "spin") {
-		rotation.spin = true;
+		rotation.spin = !rotation.spin;
 	} else {
 		rotation.y = -Math.PI/2;
 		rotation.x = 0;
