@@ -7,6 +7,7 @@ var calculatedDistance = [];
 
 var playerPosition = 0;
 var playerMoney = 1500;
+var playerStreets = [];
 
 var polygons = [
 	[true, [18.9, 0, 18.9], [-18.9, 0, 18.9], [-18.9, 0, -18.9], [18.9, 0, -18.9], [18.9, 0, 18.9], "#CBE7D0"], // main board
@@ -18,63 +19,64 @@ var polygons = [
 	[[0, -10, 0], "Monopoly but with capitalism."] // testing text
 ];
 
-// street name, rent, rent w/colour set, 1 house, 2 houses, 3 houses, 4 houses, hotel, house cost, hotel cost, colour
+// street name, rent, rent w/colour set, 1 house, 2 houses, 3 houses, 4 houses, hotel, house cost, hotel cost, cost to buy, colour
 
 const streets = [
 	[
-		["Mediterranean Avenue", 2, 4, 10, 30, 90, 160, 250, 50, 50, "#965a38"],
+		["Mediterranean Avenue", 2, 4, 10, 30, 90, 160, 250, 50, 50, 60, "#965a38"],
 		["Community Chest", "#ffffff"],
-		["Baltic Avenue", 4, 8, 20, 60, 180, 320, 450, 50, 50, "#965a38"],
+		["Baltic Avenue", 4, 8, 20, 60, 180, 320, 450, 50, 50, 60, "#965a38"],
 		["Income Tax", "#ffffff"],
-	
-		["Reading Railroad", 25, 50, 100, 200, null, null, null, null, null, "#ffffff"],
-	
-		["Oriental Avenue", 6, 12, 30, 90, 270, 400, 550, 50, 50, "#a8e1fb"],
+		
+		["Reading Railroad", 25, 50, 100, 200, null, null, null, null, null, 200, "#ffffff"],
+		
+		["Oriental Avenue", 6, 12, 30, 90, 270, 400, 550, 50, 50, 100, "#a8e1fb"],
 		["Chance", "#ffffff"],
-		["Vermont Avenue", 6, 12, 30, 90, 270, 400, 550, 50, 50, "#a8e1fb"],
-		["Connecticut Avenue", 8, 16, 40, 100, 300, 450, 600, 50, 50, "#a8e1fb"],
+		["Vermont Avenue", 6, 12, 30, 90, 270, 400, 550, 50, 50, 100, "#a8e1fb"],
+		["Connecticut Avenue", 8, 16, 40, 100, 300, 450, 600, 50, 50, 120, "#a8e1fb"],
 		["Jail", "#FFFFFF"]
 	], [
-		["St. Charles Place", 10, 20, 50, 150, 450, 625, 750, 100, 100, "#d93a96"],
-		["Electric Company", 4, 10, null, null, null, null, null, 75, null, "#ffffff"],
-		["States Avenue", 10, 20, 50, 150, 450, 625, 750, 100, 100, "#d93a96"],
-		["Virginia Avenue", 12, 24, 60, 180, 500, 700, 900, 100, 100, "#d93a96"],
-
-		["Pennsylvania Railroad", 25, 50, 100, 200, null, null, null, null, null, "#ffffff"],
-	
-		["St. James Place", 14, 28, 70, 200, 550, 750, 950, 100, 100, "#f7941d"],
+		["St. Charles Place", 10, 20, 50, 150, 450, 625, 750, 100, 100, 140, "#d93a96"],
+		["Electric Company", 4, 10, null, null, null, null, null, 75, null, 150, "#ffffff"],
+		["States Avenue", 10, 20, 50, 150, 450, 625, 750, 100, 100, 140, "#d93a96"],
+		["Virginia Avenue", 12, 24, 60, 180, 500, 700, 900, 100, 100, 160, "#d93a96"],
+		
+		["Pennsylvania Railroad", 25, 50, 100, 200, null, null, null, null, null, 200, "#ffffff"],
+		
+		["St. James Place", 14, 28, 70, 200, 550, 750, 950, 100, 100, 180, "#f7941d"],
 		["Community Chest", "#ffffff"],
-		["Tennessee Avenue", 14, 28, 70, 200, 550, 750, 950, 100, 100, "#f7941d"],
-		["New York Avenue", 16, 32, 80, 220, 600, 800, 1000, 100, 100, "#f7941d"],
+		["Tennessee Avenue", 14, 28, 70, 200, 550, 750, 950, 100, 100, 180, "#f7941d"],
+		["New York Avenue", 16, 32, 80, 220, 600, 800, 1000, 100, 100, 200, "#f7941d"],
 		["Free Parking", "#FFFFFF"]
 	], [
-		["Kentucky Avenue", 18, 36, 90, 250, 700, 875, 1050, 150, 150, "#ed1b24"],
+		["Kentucky Avenue", 18, 36, 90, 250, 700, 875, 1050, 150, 150, 220, "#ed1b24"],
 		["Chance", "#ffffff"],
-		["Indiana Avenue", 18, 36, 90, 250, 700, 875, 1050, 150, 150, "#ed1b24"],
-		["Illinois Avenue", 20, 40, 100, 300, 750, 925, 1100, 150, 150, "#ed1b24"],
-	
-		["B&O Railroad", 25, 50, 100, 200, null, null, null, null, null, "#ffffff"],
-	
-		["Atlantic Avenue", 22, 44, 110, 330, 800, 975, 1150, 150, 150, "#fefe22"],
-		["Ventnor Avenue", 22, 44, 110, 330, 800, 975, 1150, 150, 150, "#fefe22"],
-		["Water Works", 4, 10, null, null, null, null, null, 75, null, "#ffffff"],
-		["Marvin Gardens", 24, 48, 120, 360, 850, 1025, 1200, 150, 150, "#fefe22"],
+		["Indiana Avenue", 18, 36, 90, 250, 700, 875, 1050, 150, 150, 220, "#ed1b24"],
+		["Illinois Avenue", 20, 40, 100, 300, 750, 925, 1100, 150, 150, 240, "#ed1b24"],
+		
+		["B&O Railroad", 25, 50, 100, 200, null, null, null, null, null, 200, "#ffffff"],
+		
+		["Atlantic Avenue", 22, 44, 110, 330, 800, 975, 1150, 150, 150, 260, "#fefe22"],
+		["Ventnor Avenue", 22, 44, 110, 330, 800, 975, 1150, 150, 150, 260, "#fefe22"],
+		["Water Works", 4, 10, null, null, null, null, null, 75, null, 150, "#ffffff"],
+		["Marvin Gardens", 24, 48, 120, 360, 850, 1025, 1200, 150, 150, 280, "#fefe22"],
 		["Goto Jail", "#FFFFFF"]
 	], [  
-		["Pacific Avenue", 26, 52, 130, 390, 900, 1100, 1275, 200, 200, "#1fb25a"],
-		["North Carolina Avenue", 26, 52, 130, 390, 900, 1100, 1275, 200, 200, "#1fb25a"],
+		["Pacific Avenue", 26, 52, 130, 390, 900, 1100, 1275, 200, 200, 300, "#1fb25a"],
+		["North Carolina Avenue", 26, 52, 130, 390, 900, 1100, 1275, 200, 200, 300, "#1fb25a"],
 		["Community Chest", "#ffffff"],
-		["Pennsylvania Avenue", 28, 56, 150, 450, 1000, 1200, 1400, 200, 200, "#1fb25a"],
-	
-		["Short Line Railroad", 25, 50, 100, 200, null, null, null, null, null, "#ffffff"],
-	
+		["Pennsylvania Avenue", 28, 56, 150, 450, 1000, 1200, 1400, 200, 200, 320, "#1fb25a"],
+		
+		["Short Line Railroad", 25, 50, 100, 200, null, null, null, null, null, 200, "#ffffff"],
+		
 		["Chance", "#ffffff"],
-		["Park Place", 35, 70, 175, 500, 1100, 1300, 1500, 200, 200, "#0072bb"],
+		["Park Place", 35, 70, 175, 500, 1100, 1300, 1500, 200, 200, 350, "#0072bb"],
 		["Luxury Tax", "#ffffff"],
-		["Boardwalk", 50, 100, 200, 600, 1400, 1700, 2000, 200, 200, "#0072bb"],
+		["Boardwalk", 50, 100, 200, 600, 1400, 1700, 2000, 200, 200, 400, "#0072bb"],
 		["Go", "#FFFFFF"]
 	]
 ];
+
 
 for (let index = 0; index < 9; index ++) {
 	let factor = index*4.2;
@@ -190,7 +192,7 @@ function movePlayerPosition(coordinate, value, amount) {
     function animate() {
         if (index < 20) {
             polygons[5][0][coordinate] += step*amount;
-			polygons[5][0][1] = -Math.abs(Math.sin(index/6)*5);
+			polygons[5][0][1] = -Math.abs(Math.sin(index/6)*2.5);
             index ++;
             requestAnimationFrame(animate);
         }
@@ -267,7 +269,7 @@ const sprite = new Image();
 sprite.src = "favicon.png";
 
 function all() {
-	calculatePolygons(); drawAll();
+	calculatePolygons(); drawAll(); 
 
 	document.getElementById("money").innerHTML = playerMoney;
 
@@ -284,7 +286,8 @@ function all() {
 			}
 		}
 	}
-
+	
+	/* displaying current street name and data
 	document.getElementById("streetName").innerHTML = street[0];
 	document.getElementById("header").style.backgroundColor = street[street.length-1];
 
@@ -298,6 +301,36 @@ function all() {
 
 	document.getElementById("hCost").innerHTML = "£"+(street[8] == undefined?0:street[8]);
 	document.getElementById("anHCost").innerHTML = "£"+(street[9] == undefined?0:street[9]);
+	*/
+
+	document.getElementById("currentLocation").innerHTML = `FYI:<br>Current Position: <div style="background-color: ${street[street.length-1]};">`+street[0];
+	if (street[10] != null || street[10] != undefined) {
+		if (street[10].toString().substring(0, 1) != "#") {
+			document.getElementById("currentLocation").innerHTML += "<br>Cost: £"+street[10];
+
+			document.getElementById("currentLocation").innerHTML += `<br><div style="border: 1px solid black; width: 150px; padding: 3px; margin: 3px;"><div style="background-color: ${street[street.length-1]}; width: 150px; text-align: center;"><div style="font-size: 11px;">TITLE DEED</div><br>${street[0]}</div><br>Rent: £${street[1]}<br>With Colour Set: £${street[2]}<br>1 House: £${street[3]}<br>2 Houses: £${street[4]}<br>3 Houses: £${street[5]}<br>4 Houses: £${street[6]}<br>An Hotel: £${street[7]}<hr>House Cost: £${street[8]}<br>Hotel Cost: £${street[9]}<br></div>`;
+		}
+	}
+}
+
+function buy(item) {
+	let street = null;
+	for (let index = 0; index < streets.length; index ++) {
+		for (let streetIndex = 0; streetIndex < 10; streetIndex ++) {
+			if (index*10+streetIndex+1 == playerPosition) {
+				street = streets[index][streetIndex];
+			}
+		}
+	}
+	if (item == "street" && playerStreets.includes(street) == false && !([2, 4, 7, 10, 17, 20, 22, 30, 33, 36, 38]).includes(playerPosition) && playerMoney >= street[10]) {
+		playerStreets.push(street);
+		document.getElementById("streetInventory").innerHTML += `<div style="border: 1px solid black; width: 150px; padding: 3px; margin: 3px;"><div style="background-color: ${street[street.length-1]}; width: 150px; text-align: center;"><div style="font-size: 11px;">TITLE DEED</div><br>${street[0]}</div><br>Rent: £${street[1]}<br>With Colour Set: £${street[2]}<br>1 House: £${street[3]}<br>2 Houses: £${street[4]}<br>3 Houses: £${street[5]}<br>4 Houses: £${street[6]}<br>An Hotel: £${street[7]}<hr>House Cost: £${street[8]}<br>Hotel Cost: £${street[9]}<br></div>`;
+		playerMoney -= street[10];
+		document.getElementById("streets").innerHTML = playerStreets.length+" : ";
+		for (let index = 0; index < playerStreets.length; index ++) {
+			document.getElementById("streets").innerHTML += playerStreets[index][0]+", ";
+		}
+	}
 }
 
 sprite.addEventListener("load", () => {
