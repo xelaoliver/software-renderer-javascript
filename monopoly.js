@@ -112,7 +112,7 @@ function calculateVertex(x, y, z) {
 
 	y = nY; z = nZ;
 
-	z += 50;
+	z += 60;
 
 	return [x, y, z];
 }
@@ -238,12 +238,6 @@ function rollDice(one) {
 	movePlayer(random);
 }
 
-function buyStreet() {
-	if (streets[playerPosition] != "#FFFFFF" && playerMoney) {
-
-	}
-}
-
 function feature(argument) {
 	if (argument == "askew") {
 		rotation.y = -Math.PI/6;
@@ -287,7 +281,8 @@ function all() {
 		}
 	}
 	
-	/* displaying current street name and data
+	/*
+	displaying current street name and data
 	document.getElementById("streetName").innerHTML = street[0];
 	document.getElementById("header").style.backgroundColor = street[street.length-1];
 
@@ -323,13 +318,26 @@ function buy(item) {
 		}
 	}
 	if (item == "street" && playerStreets.includes(street) == false && !([2, 4, 7, 10, 17, 20, 22, 30, 33, 36, 38]).includes(playerPosition) && playerMoney >= street[10]) {
-		playerStreets.push(street);
 		document.getElementById("streetInventory").innerHTML += `<div style="border: 1px solid black; width: 150px; padding: 3px; margin: 3px;"><div style="background-color: ${street[street.length-1]}; width: 150px; text-align: center;"><div style="font-size: 11px;">TITLE DEED</div><br>${street[0]}</div><br>Rent: £${street[1]}<br>With Colour Set: £${street[2]}<br>1 House: £${street[3]}<br>2 Houses: £${street[4]}<br>3 Houses: £${street[5]}<br>4 Houses: £${street[6]}<br>An Hotel: £${street[7]}<hr>House Cost: £${street[8]}<br>Hotel Cost: £${street[9]}<br></div>`;
 		playerMoney -= street[10];
 		document.getElementById("streets").innerHTML = playerStreets.length+" : ";
 		for (let index = 0; index < playerStreets.length; index ++) {
 			document.getElementById("streets").innerHTML += playerStreets[index][0]+", ";
 		}
+		playerStreets.push(street[0]);
+	} else if (item == "house") {
+		if (playerStreets.includes(street[0])) {
+			if (isNaN(playerStreets[playerStreets.indexOf(street[0])+1])) {
+				playerStreets[playerStreets.indexOf(street[0])+1] = 1;
+				playerMoney -= street[10]; 
+			} else {
+				if (playerStreets[playerStreets.indexOf(street[0])+1] < 4) {
+					playerStreets[playerStreets.indexOf(street[0])+1] ++;
+					playerMoney -= street[10]; 
+				}
+			}
+		}
+		console.log(playerStreets);
 	}
 }
 
