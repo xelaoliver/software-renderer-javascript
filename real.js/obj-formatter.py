@@ -1,4 +1,4 @@
-with open('apth/to/your/obj/file', 'r') as f:
+with open('path/to/obj.obj', 'r') as f:
     obj = []
     for line in f:
         obj.append(line)
@@ -31,6 +31,6 @@ for i in range(len(indecies)):
 
 print("M", mesh)
 
-output = open("path/to/your/output/file", "a")
+output = open("path/to/output.txt", "a")
 
 output.write(str(mesh).replace("'], ", "'], \n"))
