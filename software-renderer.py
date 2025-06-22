@@ -1,5 +1,5 @@
-# copyright alex oliver 2024
-# enquiries: https://xelaoliver.github.io
+# Alex Oliver 2024
+# https://xelaoliver.github.io
 
 import pygame
 import math
